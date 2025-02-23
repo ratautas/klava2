@@ -1,0 +1,98 @@
+@import 'tailwindcss';
+
+@keyframes shake {
+
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+
+  25% {
+    transform: translateX(-10px);
+  }
+
+  75% {
+    transform: translateX(10px);
+  }
+}
+
+@keyframes celebrate {
+  0% {
+    transform: scale(1);
+  }
+
+  50% {
+    transform: scale(1.2);
+  }
+
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+  }
+
+  50% {
+    transform: scale(1.05);
+  }
+
+  100% {
+    transform: scale(1);
+  }
+}
+
+:root {
+  --color-correct: #4ade80;
+  --color-incorrect: #f87171;
+  --color-focus: #60a5fa;
+  --transition-speed: 0.3s;
+}
+
+body {
+  @apply min-h-screen bg-gray-50 font-sans;
+}
+
+.letter-input {
+  @apply h-20 w-16 text-4xl text-center border-2 rounded-lg mx-2.5 focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all duration-300;
+}
+
+.letter-input.correct {
+  @apply border-green-400 bg-green-50;
+}
+
+.letter-input.incorrect {
+  @apply border-red-400 bg-red-50;
+  animation: shake 0.5s ease-in-out;
+}
+
+.word-display {
+  @apply text-6xl font-bold text-gray-800 mb-8;
+}
+
+.success-message {
+  @apply fixed inset-0 flex items-center justify-center bg-black;
+}
+
+.success-content {
+  @apply bg-white p-8 rounded-xl shadow-2xl text-center max-w-md mx-4;
+  animation: celebrate 1s ease-in-out;
+}
+
+.difficulty-selector {
+  @apply fixed top-4 right-4 p-2 bg-white rounded-lg shadow-md;
+}
+
+.game-container {
+  @apply container mx-auto px-4 py-8 flex flex-col items-center justify-center min-h-screen;
+}
+
+.speak-button {
+  @apply relative inline-flex items-center justify-center;
+}
+
+.speak-button:not(:disabled):hover {
+  animation: pulse 0.3s ease-in-out;
+}
