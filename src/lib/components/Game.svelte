@@ -67,9 +67,7 @@
             letterStates[index + 1].isFocused = true;
             currentIndex = index + 1;
         } else if (isCorrect && index === currentWord.length - 1) {
-            // Wait a moment before speaking
-            await new Promise(resolve => setTimeout(resolve, 500));
-            // Speak the word
+            // Speak the word immediately
             await speakWord(currentWord);
             // Clear all inputs after word is spoken
             letterStates = letterStates.map(state => ({
@@ -77,10 +75,8 @@
                 isCorrect: null,
                 isFocused: false
             }));
-            // Start new game after a short delay
-            setTimeout(() => {
-                initializeGame();
-            }, 500);
+            // Start new game immediately after
+            initializeGame();
         }
     }
 

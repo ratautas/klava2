@@ -12,7 +12,7 @@
     let inputElement: HTMLInputElement;
 
     $effect(() => {
-        if (props.state.isFocused && inputElement) {
+        if ((props.state.isFocused || props.state.isCorrect === false) && inputElement) {
             inputElement.focus();
             inputElement.select();
         }

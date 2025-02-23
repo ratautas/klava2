@@ -14,7 +14,7 @@ export const POST: RequestHandler = async ({ request }) => {
                 'Referer': 'https://snekos-sinteze.lt/'
             },
             body: JSON.stringify({
-                text,
+                text: text,
                 saveRequest: false,
                 outputTextFormat: 'none',
                 speed: 1,
