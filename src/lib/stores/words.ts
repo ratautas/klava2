@@ -1,15 +1,8 @@
 // List of practice words
 export const WORD_LIST = [
-  'HELLO',
-  'WORLD',
-  'SVELTE',
-  'LEARN',
-  'TYPE',
-  'CODING',
-  'PRACTICE',
-  'KEYBOARD',
-  'ROUTE',
-  'COMPONENT'
+  'NAMAS',
+  'MAMA',
+  'SALA',
 ];
 
 /**

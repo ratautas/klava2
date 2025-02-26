@@ -3,6 +3,7 @@
 	import { goto } from '$app/navigation';
 	import { onMount } from 'svelte';
 	import { WORD_LIST, getNextWord } from '$lib/stores/words';
+	import { synthesizeSpeech, playAudio, unlockAudioPlayback } from '$lib/services/tts';
 
 	// Get the word from the route data
 	const { data } = $props<{ data: import('./$types').PageData }>();
@@ -17,19 +18,35 @@
 	// Track if word has been pronounced
 	let hasBeenPronounced = $state(false);
 	let isPlaying = $state(false);
+	let autoplayBlocked = $state(false);
 
-	// Function to pronounce the word
-	function pronounceWord() {
-		if (!window.speechSynthesis) return;
+	// Function to pronounce the word using TTS service
+	async function pronounceWord() {
+		if (isPlaying) return;
 
 		isPlaying = true;
-		const utterance = new SpeechSynthesisUtterance(word);
-		utterance.rate = 0.9; // Slightly slower for clarity
-		utterance.onend = () => {
+
+		try {
+			// Use the TTS service to convert text to speech
+			const audioBase64 = await synthesizeSpeech(word);
+
+			// Try to play the audio and wait for it to complete
+			await playAudio(audioBase64);
+
+			// Mark as pronounced once audio is done playing
 			hasBeenPronounced = true;
+			autoplayBlocked = false;
+		} catch (error: any) {
+			console.error('Failed to pronounce word:', error);
+
+			// Check if this was due to autoplay blocking
+			if (error.message?.includes('user interaction')) {
+				autoplayBlocked = true;
+				// Don't set hasBeenPronounced to true here, as we still need to play it
+			}
+		} finally {
 			isPlaying = false;
-		};
-		window.speechSynthesis.speak(utterance);
+		}
 	}
 
 	function handleKeyDown(event: KeyboardEvent) {
@@ -49,8 +66,14 @@
 	onMount(() => {
 		window.addEventListener('keydown', handleKeyDown);
 
-		// Automatically pronounce the word on load
-		setTimeout(pronounceWord, 500);
+		// Try to unlock audio context and play word
+		const initialize = async () => {
+			await unlockAudioPlayback();
+			// Attempt to pronounce the word automatically after a short delay
+			setTimeout(() => pronounceWord(), 500);
+		};
+
+		initialize().catch(console.error);
 
 		return () => {
 			window.removeEventListener('keydown', handleKeyDown);
@@ -64,7 +87,6 @@
 	<div class="rounded-lg border bg-white p-6 shadow-sm">
 		<div class="flex flex-col items-center gap-4">
 			<h3 class="text-2xl font-bold text-green-600 uppercase">{word}</h3>
-			<p class="font-medium text-green-600">Great job!</p>
 
 			<!-- Pronunciation and Next Step Controls -->
 			<div class="mt-2 flex flex-col items-center">
@@ -88,13 +110,8 @@
 						</svg>
 						{isPlaying ? 'Playing...' : 'Hear pronunciation'}
 					</button>
-
-					<KeyCap key=" " size="lg" />
-					<p class="mt-1 text-sm text-gray-600">Press Space to hear the word</p>
-				{:else}
-					<KeyCap key=" " size="lg" />
-					<p class="mt-1 text-sm text-gray-600">Press Space for next word ({nextWordUppercase})</p>
 				{/if}
+				<KeyCap key=" " size="lg" />
 			</div>
 		</div>
 	</div>
