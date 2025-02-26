@@ -17,7 +17,7 @@
 
 <main class="p-8">
 	<div class="flex flex-col items-center gap-4">
-		<h3 class="text-4xl font-bold uppercase">{word}</h3>
+		<h3 class="text-6xl font-bold uppercase">{word}</h3>
 		<div class="mt-2 text-center">
 			<KeyCap key=" " size="lg" />
 		</div>

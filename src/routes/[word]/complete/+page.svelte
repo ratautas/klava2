@@ -71,7 +71,7 @@
 
 <main class="p-8">
 	<div class="flex flex-col items-center gap-4">
-		<h3 class="text-4xl font-bold text-green-600 uppercase">{word}</h3>
+		<h3 class="text-6xl font-bold text-green-600 uppercase">{word}</h3>
 
 		<!-- Pronunciation and Next Step Controls -->
 		<div class="mt-2 flex flex-col items-center">
