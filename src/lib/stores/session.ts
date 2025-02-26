@@ -1,9 +1,11 @@
 import { writable, derived, get } from 'svelte/store';
 import { browser } from '$app/environment';
 import { WORD_LIST, getRandomWord } from './words';
+import { getCookie, setCookie } from '$lib/utils/cookies';
+import { settingsStore } from './settings';
 
-const SESSION_STORAGE_KEY = 'wordSession';
-const SESSION_LENGTH = 12;
+// Cookie names
+const SESSION_COOKIE = 'wordSession';
 
 // Type definitions
 interface WordSession {
@@ -16,11 +18,25 @@ interface WordSession {
 function createSessionStore() {
   // Create a new random session
   const createNewSession = (): WordSession => {
+    // Get the configured session length
+    const sessionLength = settingsStore.getWordsPerSession();
+    // Get the available words from settings
+    const availableWords = settingsStore.getAvailableWords();
+    
+    // Check if we have enough available words
+    if (availableWords.length < sessionLength) {
+      console.warn(`Not enough available words (${availableWords.length}) for requested session length (${sessionLength}). Using all available words.`);
+    }
+    
+    const actualSessionLength = Math.min(sessionLength, availableWords.length);
     const words: string[] = [];
     
-    // Generate unique random words for the session
-    while (words.length < SESSION_LENGTH) {
-      const word = getRandomWord();
+    // Generate unique random words for the session from available words
+    while (words.length < actualSessionLength && words.length < availableWords.length) {
+      // Get a random word from available words
+      const randomIndex = Math.floor(Math.random() * availableWords.length);
+      const word = availableWords[randomIndex];
+      
       // Avoid duplicates
       if (!words.includes(word)) {
         words.push(word);
@@ -30,21 +46,31 @@ function createSessionStore() {
     return {
       words,
       currentIndex: 0,
-      completed: Array(SESSION_LENGTH).fill(false)
+      completed: Array(words.length).fill(false)
     };
   };
 
-  // Try to load from localStorage in browser environment
-  const initialSession = browser 
-    ? JSON.parse(localStorage.getItem(SESSION_STORAGE_KEY) || 'null') 
-    : null;
+  // Try to load from cookie in browser environment
+  const loadSessionFromCookie = (): WordSession | null => {
+    if (!browser) return null;
+    
+    const sessionCookie = getCookie(SESSION_COOKIE);
+    if (!sessionCookie) return null;
+    
+    try {
+      return JSON.parse(sessionCookie);
+    } catch (e) {
+      console.error('Failed to parse session cookie:', e);
+      return null;
+    }
+  };
 
-  const session = writable<WordSession>(initialSession || createNewSession());
+  const session = writable<WordSession>(loadSessionFromCookie() || createNewSession());
 
-  // Subscribe and save to localStorage when changes occur in browser
+  // Subscribe and save to cookie when changes occur in browser
   if (browser) {
     session.subscribe(value => {
-      localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(value));
+      setCookie(SESSION_COOKIE, JSON.stringify(value));
     });
   }
 
@@ -70,7 +96,7 @@ function createSessionStore() {
         s.completed[s.currentIndex] = true;
         
         // Move to next word if not at the end
-        if (s.currentIndex < SESSION_LENGTH - 1) {
+        if (s.currentIndex < s.words.length - 1) {
           s.currentIndex += 1;
         }
         
@@ -81,7 +107,7 @@ function createSessionStore() {
     // Get the next word in the session
     getNextWord: () => {
       const $session = get(session);
-      const nextIndex = Math.min($session.currentIndex + 1, SESSION_LENGTH - 1);
+      const nextIndex = Math.min($session.currentIndex + 1, $session.words.length - 1);
       return $session.words[nextIndex];
     },
     
@@ -100,7 +126,7 @@ function createSessionStore() {
     getSessionStatus: () => {
       const $session = get(session);
       return {
-        total: SESSION_LENGTH,
+        total: $session.words.length,
         completed: $session.completed.filter(Boolean).length,
         current: $session.currentIndex,
         words: $session.words,
