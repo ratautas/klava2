@@ -9,25 +9,14 @@
 	const word = data.word?.toUpperCase() || '';
 
 	// Store user inputs
-	let inputs: string[] = [];
-	let inputRefs: HTMLInputElement[] = [];
-	let currentFocusIndex = 0;
-
-	// Initialize inputs array with empty strings for each letter
-	$effect(() => {
-		if (word) {
-			inputs = Array(word.length).fill('');
-			inputRefs = Array(word.length).fill(null);
-			// Focus first input on mount
-			setTimeout(() => {
-				if (inputRefs[0]) inputRefs[0].focus();
-			}, 0);
-		}
-	});
+	let inputsValues = $state<string[]>([]);
+	let inputRefs = $state<HTMLInputElement[]>([]);
+	let currentFocusIndex = $state(0);
 
 	// Track if all inputs match the word letters
 	const isComplete = $derived(
-		word.toLowerCase() === inputs.join('').toLowerCase() && inputs.every((input) => input !== '')
+		word.toLowerCase() === inputsValues.join('').toLowerCase() &&
+			inputsValues.every((input) => input !== '')
 	);
 
 	function handleKeyDown(event: KeyboardEvent) {
@@ -39,8 +28,7 @@
 
 	function handleInput(index: number, event: Event) {
 		const input = event.target as HTMLInputElement;
-		inputs[index] = input.value;
-		inputs = [...inputs]; // Trigger reactivity
+		inputsValues[index] = input.value;
 
 		// Auto-advance to next input if text was entered
 		if (input.value && index < word.length - 1) {
@@ -50,18 +38,14 @@
 			}, 0);
 		}
 	}
-
-	onMount(() => {
-		window.addEventListener('keydown', handleKeyDown);
-		return () => {
-			window.removeEventListener('keydown', handleKeyDown);
-		};
-	});
 </script>
+
+<svelte:window onkeydown={handleKeyDown} />
 
 <main class="mx-auto max-w-3xl p-8">
 	<div class="word-practice rounded-lg border bg-white p-6 shadow-sm">
 		<div class="flex flex-col items-center gap-4">
+			<h3 class="mb-4 text-4xl font-bold">{word}</h3>
 			<div class="mb-4 flex gap-4">
 				{#each word.split('') as letter, i}
 					<div class="letter-input">
@@ -69,13 +53,13 @@
 							type="text"
 							maxlength="1"
 							class="h-20 w-20 rounded-md border-2 text-center text-2xl font-bold
-                    {inputs[i]
-								? inputs[i].toLowerCase() === letter.toLowerCase()
+                    {inputsValues[i]
+								? inputsValues[i].toLowerCase() === letter.toLowerCase()
 									? 'border-green-500 bg-green-50'
 									: 'border-red-500 bg-red-50'
 								: 'border-gray-300'}"
-							value={inputs[i]}
-							on:input={(e) => handleInput(i, e)}
+							value={inputsValues[i]}
+							oninput={(e) => handleInput(i, e)}
 							bind:this={inputRefs[i]}
 						/>
 					</div>
