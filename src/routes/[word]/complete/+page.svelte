@@ -63,7 +63,7 @@
 </script>
 
 <main class="mx-auto max-w-3xl p-8">
-	<div class="word-practice rounded-lg border bg-white p-6 shadow-sm">
+	<div class="rounded-lg border bg-white p-6 shadow-sm">
 		<div class="flex flex-col items-center gap-4">
 			<h3 class="text-2xl font-bold text-green-600">{word}</h3>
 			<p class="font-medium text-green-600">Great job!</p>
@@ -108,10 +108,3 @@
 		</div>
 	</div>
 </main>
-
-<style>
-	.word-practice {
-		max-width: 500px;
-		margin: 0 auto;
-	}
-</style>
