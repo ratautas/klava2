@@ -3,8 +3,8 @@
 	import { goto } from '$app/navigation';
 	import { onMount } from 'svelte';
 
-	const { data } = $props<{data: import('./$types').PageData}>();
-	
+	const { data } = $props<{ data: import('./$types').PageData }>();
+
 	// Get the word from the route data
 	const word = data.word?.toUpperCase() || '';
 
