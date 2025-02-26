@@ -2,10 +2,14 @@
 	import KeyCap from '$lib/components/KeyCap.svelte';
 	import { goto } from '$app/navigation';
 	import { onMount, tick } from 'svelte';
+	import { getNextWord } from '$lib/stores/words';
 
 	// Get the word from the route data
 	const { data } = $props<{ data: import('./$types').PageData }>();
 	const { word } = data;
+
+	// Get the next word
+	const nextWord = $derived(getNextWord(word));
 
 	// Store user inputs
 	let inputsValues = $state<string[]>([]);
@@ -17,7 +21,7 @@
 	function handleKeyDown(event: KeyboardEvent) {
 		if (event.key === ' ' && isComplete) {
 			event.preventDefault();
-			goto(`/${word.toLowerCase()}/complete`);
+			goto(`/${nextWord}`);
 		}
 	}
 

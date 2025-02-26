@@ -1,7 +1,9 @@
 <script lang="ts">
+	type KeyCapSize = 'sm' | 'md' | 'lg';
+
 	let { key = '', size = 'md' } = $props<{
 		key: string;
-		size?: 'sm' | 'md' | 'lg';
+		size?: KeyCapSize;
 	}>();
 
 	// Map special keys to their display names
@@ -28,7 +30,7 @@
 			sm: 'min-w-[24px] h-[24px] text-xs',
 			md: 'min-w-[32px] h-[32px] text-sm',
 			lg: 'min-w-[40px] h-[40px] text-base'
-		}[size as 'sm' | 'md' | 'lg']
+		}[size as KeyCapSize]
 	);
 
 	const isSpaceBar = $derived(key === ' ');
@@ -37,7 +39,7 @@
 			sm: 'w-[64px]',
 			md: 'w-[96px]',
 			lg: 'w-[128px]'
-		}[size as 'sm' | 'md' | 'lg']
+		}[size as KeyCapSize]
 	);
 </script>
 
