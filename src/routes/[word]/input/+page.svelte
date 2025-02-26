@@ -47,15 +47,16 @@
 
 <main class="mx-auto max-w-3xl p-8">
 	<div class="flex flex-col items-center gap-4">
-		<h3 class="mb-4 text-4xl font-bold">{word}</h3>
+		<h3 class="mb-4 text-4xl font-bold uppercase">{word}</h3>
 		<div class="mb-4 flex gap-4">
 			{#each word.split('') as letter, i}
-				<div class="flex items-center justify-center">
+				<div class="flex items-center justify-center uppercase">
 					<input
 						type="text"
 						maxlength="1"
-						class="h-12 w-12 translate-y-0 rounded-md border text-center
-								text-xl transition-all duration-200 ease-in-out
+						class="h-12
+						w-12 translate-y-0 rounded-md border text-center text-xl
+								uppercase transition-all duration-200 ease-in-out
 								focus:-translate-y-0.5 focus:border-indigo-600 focus:ring-2 focus:ring-indigo-500/25 focus:outline-none
 								{inputsValues[i]
 							? isLetterCorrect(i)
