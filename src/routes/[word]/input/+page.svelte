@@ -47,7 +47,9 @@
 
 <main class="mx-auto max-w-3xl p-8">
 	<div class="flex flex-col items-center gap-4">
-		<h3 class="mb-4 text-4xl font-bold uppercase">{word}</h3>
+		<h3 class="mb-4 text-4xl font-bold uppercase" class:text-green-500={isComplete}>
+			{word}
+		</h3>
 		<div class="mb-4 flex gap-4">
 			{#each word.split('') as letter, i}
 				<div class="flex items-center justify-center uppercase">

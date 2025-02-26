@@ -1,12 +1,12 @@
 <script lang="ts">
-	import { page } from '$app/stores';
 	import KeyCap from '$lib/components/KeyCap.svelte';
 	import { goto } from '$app/navigation';
 	import { onMount } from 'svelte';
 	import { WORD_LIST, getNextWord } from '$lib/stores/words';
 
-	// Get the word from the route params
-	const word = $derived($page.params.word?.toUpperCase() || '');
+	// Get the word from the route data
+	const { data } = $props<{ data: import('./$types').PageData }>();
+	const { word } = data;
 
 	// Get the next word
 	const nextWord = $derived(getNextWord(word));
@@ -15,8 +15,8 @@
 	);
 
 	// Track if word has been pronounced
-	let hasBeenPronounced = false;
-	let isPlaying = false;
+	let hasBeenPronounced = $state(false);
+	let isPlaying = $state(false);
 
 	// Function to pronounce the word
 	function pronounceWord() {
@@ -41,7 +41,7 @@
 				pronounceWord();
 			} else {
 				// Second space press (after pronunciation) should navigate to next word
-				goto(`/words/${nextWord}`);
+				goto(`/${nextWord}`);
 			}
 		}
 	}
@@ -55,9 +55,7 @@
 		return () => {
 			window.removeEventListener('keydown', handleKeyDown);
 			// Cancel any ongoing speech when component unmounts
-			if (window.speechSynthesis) {
-				window.speechSynthesis.cancel();
-			}
+			window.speechSynthesis?.cancel();
 		};
 	});
 </script>
@@ -65,14 +63,14 @@
 <main class="mx-auto max-w-3xl p-8">
 	<div class="rounded-lg border bg-white p-6 shadow-sm">
 		<div class="flex flex-col items-center gap-4">
-			<h3 class="text-2xl font-bold text-green-600">{word}</h3>
+			<h3 class="text-2xl font-bold text-green-600 uppercase">{word}</h3>
 			<p class="font-medium text-green-600">Great job!</p>
 
 			<!-- Pronunciation and Next Step Controls -->
 			<div class="mt-2 flex flex-col items-center">
 				{#if !hasBeenPronounced}
 					<button
-						on:click={pronounceWord}
+						onclick={pronounceWord}
 						class="mb-3 flex items-center gap-2 rounded-full bg-blue-100 px-4 py-2 text-blue-700 transition-colors hover:bg-blue-200"
 						disabled={isPlaying}
 					>
@@ -97,13 +95,6 @@
 					<KeyCap key=" " size="lg" />
 					<p class="mt-1 text-sm text-gray-600">Press Space for next word ({nextWordUppercase})</p>
 				{/if}
-			</div>
-
-			<div class="mt-4 flex gap-4">
-				<a href="/" class="text-sm text-blue-600 hover:underline">Back to all words</a>
-				<a href="/words/{word.toLowerCase()}" class="text-sm text-blue-600 hover:underline"
-					>Practice again</a
-				>
 			</div>
 		</div>
 	</div>
