@@ -22,6 +22,28 @@
 		if (event.key === ' ' && isComplete) {
 			event.preventDefault();
 			goto(`/${nextWord}`);
+		} else if (event.key === 'ArrowLeft') {
+			event.preventDefault();
+			focusPreviousInput();
+		} else if (event.key === 'ArrowRight') {
+			event.preventDefault();
+			focusNextInput();
+		}
+	}
+
+	function focusNextInput() {
+		const currentFocusIndex = inputRefs.findIndex((input) => document.activeElement === input);
+		if (currentFocusIndex >= 0 && currentFocusIndex < inputRefs.length - 1) {
+			inputRefs[currentFocusIndex + 1].focus();
+			inputRefs[currentFocusIndex + 1].select();
+		}
+	}
+
+	function focusPreviousInput() {
+		const currentFocusIndex = inputRefs.findIndex((input) => document.activeElement === input);
+		if (currentFocusIndex > 0) {
+			inputRefs[currentFocusIndex - 1].focus();
+			inputRefs[currentFocusIndex - 1].select();
 		}
 	}
 
@@ -79,10 +101,21 @@
 			{/each}
 		</div>
 
-		{#if isComplete}
-			<div class="mt-2">
+		<div class="mt-2 flex items-center justify-center gap-2">
+			{#if isComplete}
 				<KeyCap key=" " size="lg" />
-			</div>
-		{/if}
+			{:else}
+				<button
+					onclick={focusPreviousInput}
+					class="focus:outline-none"
+					aria-label="Previous letter"
+				>
+					<KeyCap key="ArrowLeft" size="lg" />
+				</button>
+				<button onclick={focusNextInput} class="focus:outline-none" aria-label="Next letter">
+					<KeyCap key="ArrowRight" size="lg" />
+				</button>
+			{/if}
+		</div>
 	</div>
 </main>
