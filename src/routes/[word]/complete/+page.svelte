@@ -11,9 +11,6 @@
 
 	// Get the next word
 	const nextWord = $derived(getNextWord(word));
-	const nextWordUppercase = $derived(
-		WORD_LIST.find((w) => w.toLowerCase() === nextWord)?.toUpperCase() || ''
-	);
 
 	// Track if word has been pronounced
 	let hasBeenPronounced = $state(false);
@@ -53,19 +50,12 @@
 		if (event.key === ' ') {
 			event.preventDefault();
 
-			if (!hasBeenPronounced && !isPlaying) {
-				// First space press should pronounce the word
-				pronounceWord();
-			} else {
-				// Second space press (after pronunciation) should navigate to next word
-				goto(`/${nextWord}`);
-			}
+			// Second space press (after pronunciation) should navigate to next word
+			goto(`/${nextWord}`);
 		}
 	}
 
 	onMount(() => {
-		window.addEventListener('keydown', handleKeyDown);
-
 		// Try to unlock audio context and play word
 		const initialize = async () => {
 			await unlockAudioPlayback();
@@ -74,45 +64,39 @@
 		};
 
 		initialize().catch(console.error);
-
-		return () => {
-			window.removeEventListener('keydown', handleKeyDown);
-			// Cancel any ongoing speech when component unmounts
-			window.speechSynthesis?.cancel();
-		};
 	});
 </script>
 
-<main class="mx-auto max-w-3xl p-8">
-	<div class="rounded-lg border bg-white p-6 shadow-sm">
-		<div class="flex flex-col items-center gap-4">
-			<h3 class="text-2xl font-bold text-green-600 uppercase">{word}</h3>
+<svelte:window onkeydown={handleKeyDown} />
 
-			<!-- Pronunciation and Next Step Controls -->
-			<div class="mt-2 flex flex-col items-center">
-				{#if !hasBeenPronounced}
-					<button
-						onclick={pronounceWord}
-						class="mb-3 flex items-center gap-2 rounded-full bg-blue-100 px-4 py-2 text-blue-700 transition-colors hover:bg-blue-200"
-						disabled={isPlaying}
+<main class="p-8">
+	<div class="flex flex-col items-center gap-4">
+		<h3 class="text-4xl font-bold text-green-600 uppercase">{word}</h3>
+
+		<!-- Pronunciation and Next Step Controls -->
+		<div class="mt-2 flex flex-col items-center">
+			{#if !hasBeenPronounced}
+				<button
+					onclick={pronounceWord}
+					class="mb-3 flex items-center gap-2 rounded-full bg-blue-100 px-4 py-2 text-blue-700 transition-colors hover:bg-blue-200"
+					disabled={isPlaying}
+					aria-label="Pronounce word"
+				>
+					<svg
+						xmlns="http://www.w3.org/2000/svg"
+						class="h-5 w-5"
+						viewBox="0 0 20 20"
+						fill="currentColor"
 					>
-						<svg
-							xmlns="http://www.w3.org/2000/svg"
-							class="h-5 w-5"
-							viewBox="0 0 20 20"
-							fill="currentColor"
-						>
-							<path
-								fill-rule="evenodd"
-								d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.707.707L4.586 13H2a1 1 0 01-1-1V8a1 1 0 011-1h2.586l3.707-3.707a1 1 0 011.09-.217zM14.657 2.929a1 1 0 011.414 0A9.972 9.972 0 0119 10a9.972 9.972 0 01-2.929 7.071 1 1 0 01-1.414-1.414A7.971 7.971 0 0017 10c0-2.21-.894-4.208-2.343-5.657a1 1 0 010-1.414zm-2.829 2.828a1 1 0 011.415 0A5.983 5.983 0 0115 10a5.984 5.984 0 01-1.757 4.243 1 1 0 01-1.415-1.415A3.984 3.984 0 0013 10a3.983 3.983 0 00-1.172-2.828 1 1 0 010-1.415z"
-								clip-rule="evenodd"
-							/>
-						</svg>
-						{isPlaying ? 'Playing...' : 'Hear pronunciation'}
-					</button>
-				{/if}
-				<KeyCap key=" " size="lg" />
-			</div>
+						<path
+							fill-rule="evenodd"
+							d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.707.707L4.586 13H2a1 1 0 01-1-1V8a1 1 0 011-1h2.586l3.707-3.707a1 1 0 011.09-.217zM14.657 2.929a1 1 0 011.414 0A9.972 9.972 0 0119 10a9.972 9.972 0 01-2.929 7.071 1 1 0 01-1.414-1.414A7.971 7.971 0 0017 10c0-2.21-.894-4.208-2.343-5.657a1 1 0 010-1.414zm-2.829 2.828a1 1 0 011.415 0A5.983 5.983 0 0115 10a5.984 5.984 0 01-1.757 4.243 1 1 0 01-1.415-1.415A3.984 3.984 0 0013 10a3.983 3.983 0 00-1.172-2.828 1 1 0 010-1.415z"
+							clip-rule="evenodd"
+						/>
+					</svg>
+				</button>
+			{/if}
+			<KeyCap key=" " size="lg" />
 		</div>
 	</div>
 </main>
