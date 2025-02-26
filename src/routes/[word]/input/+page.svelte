@@ -22,7 +22,7 @@
 	function handleKeyDown(event: KeyboardEvent) {
 		if (event.key === ' ' && isComplete) {
 			event.preventDefault();
-			goto(`/words/${word.toLowerCase()}/complete`);
+			goto(`/${word.toLowerCase()}/complete`);
 		}
 	}
 
@@ -52,12 +52,12 @@
 						<input
 							type="text"
 							maxlength="1"
-							class="h-20 w-20 rounded-md border-2 text-center text-2xl font-bold
+							class="h-16 w-16 rounded-lg border-2 text-center text-2xl font-medium transition-all duration-200 
                     {inputsValues[i]
 								? inputsValues[i].toLowerCase() === letter.toLowerCase()
-									? 'border-green-500 bg-green-50'
-									: 'border-red-500 bg-red-50'
-								: 'border-gray-300'}"
+									? 'border-green-500 bg-green-50 shadow-sm shadow-green-200'
+									: 'border-red-500 bg-red-50 shadow-sm shadow-red-200'
+								: 'border-gray-200 hover:border-gray-300'}"
 							value={inputsValues[i]}
 							oninput={(e) => handleInput(i, e)}
 							bind:this={inputRefs[i]}
@@ -77,13 +77,25 @@
 
 <style>
 	.word-practice {
-		max-width: 500px;
+		max-width: 600px;
 		margin: 0 auto;
+	}
+
+	.letter-input input {
+		transform: translateY(0);
+		transition: all 0.2s ease;
 	}
 
 	.letter-input input:focus {
 		outline: none;
 		border-color: #4f46e5;
-		box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.2);
+		box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.25);
+		transform: translateY(-2px);
+	}
+	
+	.letter-input {
+		display: flex;
+		justify-content: center;
+		align-items: center;
 	}
 </style>
