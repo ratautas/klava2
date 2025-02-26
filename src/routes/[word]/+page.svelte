@@ -1,11 +1,34 @@
 <script lang="ts">
 	import KeyCap from '$lib/components/KeyCap.svelte';
+	import ProgressBullets from '$lib/components/ProgressBullets.svelte';
 	import { goto } from '$app/navigation';
 	import { onMount } from 'svelte';
 	import { synthesizeSpeech, playAudio, unlockAudioPlayback } from '$lib/services/tts';
+	import { sessionStore } from '$lib/stores/session';
 
 	const { data } = $props<{ data: import('./$types').PageData }>();
 	const { word } = data;
+
+	// Check if this is the current word in the session
+	let isCurrentSessionWord = $state(false);
+	let sessionStatus = $state<{
+		total: number;
+		completed: boolean[];
+		current: number;
+		words: string[];
+	}>({ total: 12, completed: [], current: 0, words: [] });
+	
+	// Update session status
+	function updateSessionStatus() {
+		isCurrentSessionWord = sessionStore.isCurrentWord(word);
+		const status = sessionStore.getSessionStatus();
+		sessionStatus = {
+			total: status.total,
+			completed: status.progress,
+			current: status.current,
+			words: status.words
+		};
+	}
 
 	// Track if word has been pronounced
 	let hasBeenPronounced = $state(false);
@@ -54,6 +77,9 @@
 	}
 
 	onMount(() => {
+		// Update session status when component mounts
+		updateSessionStatus();
+		
 		// Try to unlock audio context
 		const initialize = async () => {
 			await unlockAudioPlayback();
@@ -119,5 +145,15 @@
 				<KeyCap key=" " size="lg" />
 			{/if}
 		</div>
+	</div>
+	
+	<!-- Session Progress -->
+	<div class="mt-8">
+		<ProgressBullets 
+			total={sessionStatus.total} 
+			completed={sessionStatus.completed} 
+			current={sessionStatus.current} 
+			words={sessionStatus.words}
+		/>
 	</div>
 </main>

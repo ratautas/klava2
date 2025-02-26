@@ -1,15 +1,35 @@
 <script lang="ts">
 	import KeyCap from '$lib/components/KeyCap.svelte';
+	import ProgressBullets from '$lib/components/ProgressBullets.svelte';
 	import { goto } from '$app/navigation';
 	import { onMount, tick } from 'svelte';
-	import { getNextWord } from '$lib/stores/words';
+	import { sessionStore } from '$lib/stores/session';
 
 	// Get the word from the route data
 	const { data } = $props<{ data: import('./$types').PageData }>();
 	const { word } = data;
 
-	// Get the next word
-	const nextWord = $derived(getNextWord(word));
+	// Get the next word from the session
+	const nextWord = $derived(sessionStore.getNextWord());
+
+	// Session tracking
+	let sessionStatus = $state<{
+		total: number;
+		completed: boolean[];
+		current: number;
+		words: string[];
+	}>({ total: 12, completed: [], current: 0, words: [] });
+	
+	// Update session status
+	function updateSessionStatus() {
+		const status = sessionStore.getSessionStatus();
+		sessionStatus = {
+			total: status.total,
+			completed: status.progress,
+			current: status.current,
+			words: status.words
+		};
+	}
 
 	// Store user inputs
 	let inputsValues = $state<string[]>([]);
@@ -21,6 +41,9 @@
 	function handleKeyDown(event: KeyboardEvent) {
 		if (event.key === ' ' && isComplete) {
 			event.preventDefault();
+			// Mark current word as completed in the session
+			sessionStore.completeCurrentWord();
+			// Go to the next word
 			goto(`/${nextWord}`);
 		} else if (event.key === 'ArrowLeft') {
 			event.preventDefault();
@@ -64,6 +87,9 @@
 	}
 
 	onMount(() => {
+		// Update session status
+		updateSessionStatus();
+		
 		const [firstInput] = inputRefs;
 		if (firstInput) firstInput.focus();
 	});
@@ -117,5 +143,15 @@
 				</button>
 			{/if}
 		</div>
+	</div>
+	
+	<!-- Session Progress -->
+	<div class="mt-8">
+		<ProgressBullets 
+			total={sessionStatus.total} 
+			completed={sessionStatus.completed} 
+			current={sessionStatus.current} 
+			words={sessionStatus.words}
+		/>
 	</div>
 </main>
