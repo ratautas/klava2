@@ -19,7 +19,7 @@
 		current: number;
 		words: string[];
 	}>({ total: 12, completed: [], current: 0, words: [] });
-	
+
 	// Update session status
 	function updateSessionStatus() {
 		const status = sessionStore.getSessionStatus();
@@ -71,7 +71,7 @@
 	}
 
 	async function handleInput(index: number) {
-		const inputValue = inputsValues[index].toLowerCase();
+		const inputValue = inputsValues[index]?.toLowerCase();
 		const expectedValue = word[index];
 		if (inputValue === expectedValue) {
 			inputRefs[index + 1]?.focus();
@@ -83,13 +83,13 @@
 	}
 
 	function isLetterCorrect(index: number) {
-		return inputsValues[index].toLowerCase() === word[index].toLowerCase();
+		return inputsValues[index]?.toLowerCase() === word[index].toLowerCase();
 	}
 
 	onMount(() => {
 		// Update session status
 		updateSessionStatus();
-		
+
 		const [firstInput] = inputRefs;
 		if (firstInput) firstInput.focus();
 	});
@@ -108,18 +108,14 @@
 					<input
 						type="text"
 						maxlength="1"
-						class="
-						h-16
-						w-16
+						class="h-16 w-16
 						translate-y-0 rounded-md border text-center text-6xl
-								uppercase transition-all duration-200 ease-in-out
-								focus:-translate-y-0.5 focus:border-indigo-600 focus:ring-2 focus:ring-indigo-500/25 focus:outline-none
-								{inputsValues[i]
-							? isLetterCorrect(i)
-								? 'border-green-500 bg-green-50 text-green-700'
-								: 'border-red-500 bg-red-50 text-red-700'
-							: 'border-gray-300'}"
+						uppercase transition-all duration-200 ease-in-out
+						focus:-translate-y-0.5 focus:border-indigo-600 focus:ring-2 focus:ring-indigo-500/25
+						focus:outline-none"
 						oninput={() => handleInput(i)}
+						class:border-red-500={!isLetterCorrect(i) && !!inputsValues[i]}
+						class:text-red-700={!isLetterCorrect(i) && !!inputsValues[i]}
 						bind:value={inputsValues[i]}
 						bind:this={inputRefs[i]}
 					/>
@@ -144,13 +140,13 @@
 			{/if}
 		</div>
 	</div>
-	
+
 	<!-- Session Progress -->
 	<div class="mt-8">
-		<ProgressBullets 
-			total={sessionStatus.total} 
-			completed={sessionStatus.completed} 
-			current={sessionStatus.current} 
+		<ProgressBullets
+			total={sessionStatus.total}
+			completed={sessionStatus.completed}
+			current={sessionStatus.current}
 			words={sessionStatus.words}
 		/>
 	</div>
