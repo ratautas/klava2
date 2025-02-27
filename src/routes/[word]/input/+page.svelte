@@ -38,13 +38,22 @@
 	// Track if all inputs match the word letters
 	const isComplete = $derived(word === inputsValues.join('').toLowerCase());
 
+	// Check if this is the last word in the session
+	const isLastWord = $derived(sessionStatus.current === sessionStatus.total - 1);
+
 	function handleKeyDown(event: KeyboardEvent) {
 		if (event.key === ' ' && isComplete) {
 			event.preventDefault();
 			// Mark current word as completed in the session
 			sessionStore.completeCurrentWord();
-			// Go to the next word
-			goto(`/${nextWord}`);
+			
+			// If this is the last word, go to the results page
+			if (isLastWord) {
+				goto('/results');
+			} else {
+				// Otherwise, go to the next word
+				goto(`/${nextWord}`);
+			}
 		} else if (event.key === 'ArrowLeft') {
 			event.preventDefault();
 			focusPreviousInput();
