@@ -25,7 +25,6 @@ export const WORD_LIST = [
   'RATAS',
   'RYTAS',
   'SUOLAS',
-  'SAULE',
   'STALAS',
   'SAPNAS',
   'UGNIS',
@@ -36,7 +35,6 @@ export const WORD_LIST = [
   'BATAS',
   'BURNA',
   'DARBAS',
-  'GATVE',
   'LAIVAS',
   'LAPAS',
   'ORAS',
@@ -44,9 +42,6 @@ export const WORD_LIST = [
   'SIENA',
   'SNIEGAS',
   'TILTAS',
-  'RAIDE',
-  'VEJAS',
-  'ZIEMA',
 ];
 
 /**
