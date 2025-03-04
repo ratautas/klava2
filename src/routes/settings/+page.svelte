@@ -7,6 +7,15 @@
 	// Current settings
 	let wordsPerSession = $state(settingsStore.getWordsPerSession());
 	let availableWords = $state(settingsStore.getAvailableWords());
+	let selectedLevel = $state(settingsStore.getSelectedLevel() || 1);
+	
+	// Level configurations
+	const levels = [
+		{ id: 1, name: 'Level 1', range: '3-4 letter words' },
+		{ id: 2, name: 'Level 2', range: '5-6 letter words' },
+		{ id: 3, name: 'Level 3', range: '6-7 letter words' },
+		{ id: 4, name: 'Level 4', range: '7-8 letter words' }
+	];
 	
 	// Derived sorted words (to avoid sorting in the template)
 	let sortedWords = $derived(
@@ -103,6 +112,7 @@
 		// Update settings store
 		settingsStore.setWordsPerSession(wordsPerSession);
 		settingsStore.setAvailableWords(availableWords);
+		settingsStore.setSelectedLevel(selectedLevel);
 		
 		// Start a new session with the updated settings
 		sessionStore.startNewSession();
@@ -171,6 +181,26 @@
 						</div>
 						<p class="mt-1 text-sm text-gray-500">
 							Choose how many words you want to practice in each session (between {minWordsPerSession} and {maxWordsPerSession})
+						</p>
+					</div>
+
+					<div class="mb-4">
+						<label for="levelSelect" class="mb-2 block font-medium text-gray-700">
+							Difficulty Level
+						</label>
+						<select
+							id="levelSelect"
+							bind:value={selectedLevel}
+							class="w-full rounded-md border border-gray-300 px-3 py-2"
+						>
+							{#each levels as level}
+								<option value={level.id}>
+									{level.name} ({level.range})
+								</option>
+							{/each}
+						</select>
+						<p class="mt-1 text-sm text-gray-500">
+							Choose the difficulty level based on word length
 						</p>
 					</div>
 

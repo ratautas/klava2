@@ -6,12 +6,15 @@ import { WORD_LIST } from './words';
 // Cookie names
 const WORDS_PER_SESSION_COOKIE = 'wordsPerSession';
 const AVAILABLE_WORDS_COOKIE = 'availableWords';
+const SELECTED_LEVEL_COOKIE = 'selectedLevel';
 const DEFAULT_WORDS_PER_SESSION = 12;
+const DEFAULT_LEVEL = 1;
 
 // Interface for user settings
 interface UserSettings {
   wordsPerSession: number;
   availableWords: string[];
+  selectedLevel: number;
 }
 
 // Initialize settings store
@@ -21,7 +24,8 @@ function createSettingsStore() {
     if (!browser) {
       return { 
         wordsPerSession: DEFAULT_WORDS_PER_SESSION,
-        availableWords: [...WORD_LIST.map(w => w.toLowerCase())]
+        availableWords: [...WORD_LIST.map(w => w.toLowerCase())],
+        selectedLevel: DEFAULT_LEVEL
       };
     }
     
@@ -37,9 +41,16 @@ function createSettingsStore() {
       ? JSON.parse(availableWordsCookie)
       : [...WORD_LIST.map(w => w.toLowerCase())];
     
+    // Get selected level from cookie or use default
+    const selectedLevelCookie = getCookie(SELECTED_LEVEL_COOKIE);
+    const selectedLevel = selectedLevelCookie
+      ? parseInt(selectedLevelCookie, 10)
+      : DEFAULT_LEVEL;
+    
     return { 
       wordsPerSession,
-      availableWords
+      availableWords,
+      selectedLevel
     };
   };
 
@@ -50,6 +61,7 @@ function createSettingsStore() {
     settings.subscribe(value => {
       setCookie(WORDS_PER_SESSION_COOKIE, value.wordsPerSession.toString());
       setCookie(AVAILABLE_WORDS_COOKIE, JSON.stringify(value.availableWords));
+      setCookie(SELECTED_LEVEL_COOKIE, value.selectedLevel.toString());
     });
   }
 
@@ -74,6 +86,16 @@ function createSettingsStore() {
     // Get available words
     getAvailableWords: () => {
       return get(settings).availableWords;
+    },
+    
+    // Set selected level
+    setSelectedLevel: (level: number) => {
+      settings.update(s => ({ ...s, selectedLevel: level }));
+    },
+    
+    // Get selected level
+    getSelectedLevel: () => {
+      return get(settings).selectedLevel;
     },
     
     // Add a word to available words
@@ -117,7 +139,8 @@ function createSettingsStore() {
     resetToDefaults: () => {
       settings.set({
         wordsPerSession: DEFAULT_WORDS_PER_SESSION,
-        availableWords: [...WORD_LIST.map(w => w.toLowerCase())]
+        availableWords: [...WORD_LIST.map(w => w.toLowerCase())],
+        selectedLevel: DEFAULT_LEVEL
       });
     }
   };

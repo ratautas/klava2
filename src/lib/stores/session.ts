@@ -1,6 +1,6 @@
 import { writable, derived, get } from 'svelte/store';
 import { browser } from '$app/environment';
-import { WORD_LIST, getRandomWord } from './words';
+import { WORD_LIST, getRandomWord, LEVEL_1_WORDS, LEVEL_2_WORDS, LEVEL_3_WORDS, LEVEL_4_WORDS } from './words';
 import { getCookie, setCookie } from '$lib/utils/cookies';
 import { settingsStore } from './settings';
 
@@ -22,20 +22,63 @@ function createSessionStore() {
     const sessionLength = settingsStore.getWordsPerSession();
     // Get the available words from settings
     const availableWords = settingsStore.getAvailableWords();
+    // Get the selected level
+    const selectedLevel = settingsStore.getSelectedLevel() || 1;
     
-    // Check if we have enough available words
-    if (availableWords.length < sessionLength) {
-      console.warn(`Not enough available words (${availableWords.length}) for requested session length (${sessionLength}). Using all available words.`);
+    // Filter available words based on level
+    let levelFilteredWords: string[] = [];
+    
+    // Apply level filtering based on word length
+    switch (selectedLevel) {
+      case 1: // 3-4 letter words
+        levelFilteredWords = availableWords.filter(word => word.length >= 3 && word.length <= 4);
+        break;
+      case 2: // 5-6 letter words
+        levelFilteredWords = availableWords.filter(word => word.length >= 5 && word.length <= 6);
+        break;
+      case 3: // 6-7 letter words
+        levelFilteredWords = availableWords.filter(word => word.length >= 6 && word.length <= 7);
+        break;
+      case 4: // 7-8 letter words
+        levelFilteredWords = availableWords.filter(word => word.length >= 7 && word.length <= 8);
+        break;
+      default:
+        levelFilteredWords = availableWords;
     }
     
-    const actualSessionLength = Math.min(sessionLength, availableWords.length);
+    // If no words match the level criteria, fall back to level-specific word lists
+    if (levelFilteredWords.length === 0) {
+      switch (selectedLevel) {
+        case 1:
+          levelFilteredWords = LEVEL_1_WORDS.map(word => word.toLowerCase());
+          break;
+        case 2:
+          levelFilteredWords = LEVEL_2_WORDS.map(word => word.toLowerCase());
+          break;
+        case 3:
+          levelFilteredWords = LEVEL_3_WORDS.map(word => word.toLowerCase());
+          break;
+        case 4:
+          levelFilteredWords = LEVEL_4_WORDS.map(word => word.toLowerCase());
+          break;
+        default:
+          levelFilteredWords = WORD_LIST.map(word => word.toLowerCase());
+      }
+    }
+    
+    // Check if we have enough available words
+    if (levelFilteredWords.length < sessionLength) {
+      console.warn(`Not enough available words (${levelFilteredWords.length}) for requested session length (${sessionLength}). Using all available words.`);
+    }
+    
+    const actualSessionLength = Math.min(sessionLength, levelFilteredWords.length);
     const words: string[] = [];
     
     // Generate unique random words for the session from available words
-    while (words.length < actualSessionLength && words.length < availableWords.length) {
+    while (words.length < actualSessionLength && words.length < levelFilteredWords.length) {
       // Get a random word from available words
-      const randomIndex = Math.floor(Math.random() * availableWords.length);
-      const word = availableWords[randomIndex];
+      const randomIndex = Math.floor(Math.random() * levelFilteredWords.length);
+      const word = levelFilteredWords[randomIndex];
       
       // Avoid duplicates
       if (!words.includes(word)) {
