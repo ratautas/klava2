@@ -5,11 +5,16 @@
 	
 	// Function to start a new session
 	function startNewSession() {
+		// Reset used words if needed (to guarantee fresh words)
+		const totalAvailableWords = sessionStore.getUsedWordsCount();
+		console.log(`Total used words before reset: ${totalAvailableWords}`);
+		
 		// Create a new session
 		sessionStore.startNewSession();
 		
 		// Get the first word from the new session
 		const firstWord = sessionStore.getCurrentWord();
+		console.log(`Starting new session with first word: ${firstWord}`);
 		
 		// Go to the first word
 		goto(`/${firstWord}`);

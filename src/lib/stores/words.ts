@@ -136,7 +136,6 @@ export const LEVEL_3_WORDS = [
   'NAMUOSE',
   'NAKTIS',
   'NAUJAS',
-  'ORAS',
   'PASAULIS',
   'PIENAS',
   'PLAUKAI',

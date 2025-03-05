@@ -22,9 +22,18 @@
 		words: string[];
 	}>({ total: 12, completed: [], current: 0, words: [] });
 
-	// Update session status
+	// Update session status and log session information for debugging
 	function updateSessionStatus() {
 		const status = sessionStore.getSessionStatus();
+		
+		// Debug log to help identify the issue
+		console.log('Session status:', {
+			currentIndex: status.current,
+			totalWords: status.total,
+			words: status.words,
+			nextWord
+		});
+		
 		sessionStatus = {
 			total: status.total,
 			completed: status.progress,
@@ -86,7 +95,12 @@
 	}
 
 	// Check if this is the last word in the session
-	const isLastWord = $derived(sessionStatus.current === sessionStatus.total - 1);
+	const isLastWord = $derived(
+		// Multiple checks to ensure we correctly identify the last word
+		nextWord === null || 
+		sessionStatus.current >= sessionStatus.total - 1 || 
+		sessionStatus.current === sessionStatus.words.length - 1
+	);
 
 	function handleKeyDown(event: KeyboardEvent) {
 		if (event.key === ' ' && isComplete) {
@@ -97,9 +111,12 @@
 			// If this is the last word, go to the results page
 			if (isLastWord) {
 				goto('/results');
-			} else {
-				// Otherwise, go to the next word
+			} else if (nextWord) {
+				// Go to the next word only if it exists
 				goto(`/${nextWord}`);
+			} else {
+				// Fallback to results if there's no next word (shouldn't happen but just in case)
+				goto('/results');
 			}
 		} else if (event.key === 'ArrowLeft') {
 			event.preventDefault();

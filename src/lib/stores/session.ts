@@ -94,6 +94,7 @@ function createSessionStore() {
     
     // Get the current list of previously used words
     const $usedWords = get(usedWords);
+    console.log(`Used words before creating session: ${$usedWords.length} words`);
     
     // Filter out already used words for this session
     const unusedWords = levelFilteredWords.filter(word => !$usedWords.includes(word));
@@ -112,21 +113,37 @@ function createSessionStore() {
     }
     
     const actualSessionLength = Math.min(sessionLength, unusedWords.length);
-    const words: string[] = [];
+    let words: string[] = [];
     
-    // Generate unique random words for the session from available words
-    while (words.length < actualSessionLength && words.length < unusedWords.length) {
-      // Get a random word from available words
-      const randomIndex = Math.floor(Math.random() * unusedWords.length);
-      const word = unusedWords[randomIndex];
+    // Create a copy of the unused words array to avoid modifying the original
+    const availableForSelection = [...unusedWords];
+    
+    // Generate unique random words for the session
+    while (words.length < actualSessionLength && availableForSelection.length > 0) {
+      // Get a random word from the available words
+      const randomIndex = Math.floor(Math.random() * availableForSelection.length);
+      const word = availableForSelection[randomIndex];
       
-      // Avoid duplicates within this session
-      if (!words.includes(word)) {
-        words.push(word);
-        // Add to the global used words list
-        usedWords.update(list => [...list, word]);
-      }
+      // Add the word to our session words
+      words.push(word);
+      
+      // Remove the word from available selection to ensure uniqueness
+      availableForSelection.splice(randomIndex, 1);
+      
+      // Always add the word to the used words list, regardless of reset status
+      usedWords.update(list => [...list, word]);
     }
+    
+    // Final safety check for duplicates (though it shouldn't be necessary with the above logic)
+    const uniqueWords = [...new Set(words)];
+    if (uniqueWords.length !== words.length) {
+      console.error('CRITICAL: Duplicate words detected in session! Original:', words);
+      words = uniqueWords;
+      console.log('De-duplicated words:', words);
+    }
+    
+    // Log final words list for debugging
+    console.log('Final session words (in order):', words);
     
     return {
       words,
@@ -177,8 +194,17 @@ function createSessionStore() {
     // Mark the current word as completed and move to the next
     completeCurrentWord: () => {
       session.update(s => {
+        // Get the current word
+        const currentWord = s.words[s.currentIndex];
+        
         // Mark current word as completed
         s.completed[s.currentIndex] = true;
+        
+        // Ensure the completed word is in the used words list
+        const $usedWords = get(usedWords);
+        if (!$usedWords.includes(currentWord)) {
+          usedWords.update(list => [...list, currentWord]);
+        }
         
         // Move to next word if not at the end
         if (s.currentIndex < s.words.length - 1) {
@@ -192,8 +218,14 @@ function createSessionStore() {
     // Get the next word in the session
     getNextWord: () => {
       const $session = get(session);
-      const nextIndex = Math.min($session.currentIndex + 1, $session.words.length - 1);
-      return $session.words[nextIndex];
+      
+      // If we're at the last word, return null or an empty string to indicate end of session
+      if ($session.currentIndex >= $session.words.length - 1) {
+        return null;
+      }
+      
+      // Otherwise return the next word in the sequence
+      return $session.words[$session.currentIndex + 1];
     },
     
     // Check if the session is complete (all words done)
@@ -204,6 +236,63 @@ function createSessionStore() {
     
     // Start a new session
     startNewSession: () => {
+      // Check if we need to reset used words before starting a new session
+      const $usedWords = get(usedWords);
+      const availableWords = settingsStore.getAvailableWords();
+      const selectedLevel = settingsStore.getSelectedLevel() || 1;
+      
+      // Filter available words based on level (same logic as in createNewSession)
+      let levelFilteredWords: string[] = [];
+      
+      // Apply level filtering based on word length
+      switch (selectedLevel) {
+        case 1: // 3-4 letter words
+          levelFilteredWords = availableWords.filter(word => word.length >= 3 && word.length <= 4);
+          break;
+        case 2: // 5-6 letter words
+          levelFilteredWords = availableWords.filter(word => word.length >= 5 && word.length <= 6);
+          break;
+        case 3: // 6-7 letter words
+          levelFilteredWords = availableWords.filter(word => word.length >= 6 && word.length <= 7);
+          break;
+        case 4: // 7-8 letter words
+          levelFilteredWords = availableWords.filter(word => word.length >= 7 && word.length <= 8);
+          break;
+        default:
+          levelFilteredWords = availableWords;
+      }
+      
+      // If level-filtered words are too few, use level-specific lists
+      if (levelFilteredWords.length === 0) {
+        switch (selectedLevel) {
+          case 1:
+            levelFilteredWords = LEVEL_1_WORDS.map(word => word.toLowerCase());
+            break;
+          case 2:
+            levelFilteredWords = LEVEL_2_WORDS.map(word => word.toLowerCase());
+            break;
+          case 3:
+            levelFilteredWords = LEVEL_3_WORDS.map(word => word.toLowerCase());
+            break;
+          case 4:
+            levelFilteredWords = LEVEL_4_WORDS.map(word => word.toLowerCase());
+            break;
+          default:
+            levelFilteredWords = WORD_LIST.map(word => word.toLowerCase());
+        }
+      }
+      
+      // How many words are available to select from
+      const unusedWords = levelFilteredWords.filter(word => !$usedWords.includes(word));
+      const sessionLength = settingsStore.getWordsPerSession();
+      
+      // If we don't have enough unused words for a fresh session, reset the used words
+      if (unusedWords.length < sessionLength) {
+        console.log('Not enough unused words for a new session. Resetting used words list.');
+        usedWords.set([]);
+      }
+      
+      // Now create the new session with fresh words
       session.set(createNewSession());
     },
     
