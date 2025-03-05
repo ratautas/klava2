@@ -227,6 +227,30 @@ function createSessionStore() {
     // Get the number of used words
     getUsedWordsCount: () => {
       return get(usedWords).length;
+    },
+    
+    // Replace the current word in the session with a different word
+    replaceCurrentWord: (newWord: string) => {
+      session.update(s => {
+        // Make sure the word is lowercase for consistency
+        const wordLowerCase = newWord.toLowerCase();
+        
+        // Only replace if the word is different from the current one
+        if (s.words[s.currentIndex] !== wordLowerCase) {
+          // Replace the current word with the new one
+          s.words[s.currentIndex] = wordLowerCase;
+          
+          // Make sure it's not marked as completed if it was just replaced
+          s.completed[s.currentIndex] = false;
+          
+          // Add to used words list (if not already there)
+          const $usedWords = get(usedWords);
+          if (!$usedWords.includes(wordLowerCase)) {
+            usedWords.update(list => [...list, wordLowerCase]);
+          }
+        }
+        return s;
+      });
     }
   };
 }

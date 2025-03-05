@@ -31,6 +31,24 @@
 			current: status.current,
 			words: status.words
 		};
+		
+		// Check if the URL word matches the current session word
+		const isCurrentSessionWord = sessionStore.isCurrentWord(word);
+		
+		// If the URL word doesn't match the current word in the session, replace it
+		if (!isCurrentSessionWord) {
+			// Replace the current word in the session with the word from URL
+			sessionStore.replaceCurrentWord(word);
+			
+			// Update session status again to reflect changes
+			const updatedStatus = sessionStore.getSessionStatus();
+			sessionStatus = {
+				total: updatedStatus.total,
+				completed: updatedStatus.progress,
+				current: updatedStatus.current,
+				words: updatedStatus.words
+			};
+		}
 	}
 
 	// Store user inputs
