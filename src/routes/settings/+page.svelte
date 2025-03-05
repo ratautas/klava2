@@ -8,6 +8,7 @@
 	let wordsPerSession = $state(settingsStore.getWordsPerSession());
 	let availableWords = $state(settingsStore.getAvailableWords());
 	let selectedLevel = $state(settingsStore.getSelectedLevel() || 1);
+	let usedWordsCount = $state(sessionStore.getUsedWordsCount());
 	
 	// Level configurations
 	const levels = [
@@ -125,7 +126,15 @@
 	function cancel() {
 		goto('/');
 	}
-  
+	
+	// Reset the used words list
+	function resetUsedWords() {
+		if (confirm('This will reset the list of used words. All words will become available for future sessions. Continue?')) {
+			sessionStore.resetUsedWords();
+			usedWordsCount = 0;
+		}
+	}
+	
 	// Prevent form submission
 	function preventSubmit(event: Event) {
 		event.preventDefault();
@@ -271,6 +280,20 @@
 						{/if}
 					</div>
 				</div>
+
+				<!-- Used Words -->
+				<section class="mb-8">
+					<h3 class="mb-3 text-xl font-bold">Used Words</h3>
+					<p class="mb-2">
+						{usedWordsCount} words have been used across sessions (these words won't appear again until all words have been used).
+					</p>
+					<button
+						class="rounded-md bg-purple-600 px-4 py-2 text-white hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-opacity-50"
+						onclick={resetUsedWords}
+					>
+						Reset Used Words List
+					</button>
+				</section>
 
 				<div class="flex justify-end gap-4">
 					<button

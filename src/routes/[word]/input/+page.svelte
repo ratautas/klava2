@@ -4,6 +4,8 @@
 	import { goto } from '$app/navigation';
 	import { onMount, tick } from 'svelte';
 	import { sessionStore } from '$lib/stores/session';
+	import { playAudio, unlockAudioPlayback } from '$lib/services/tts';
+	import { audioDB } from '$lib/services/audioDB';
 
 	// Get the word from the route data
 	const { data } = $props<{ data: import('./$types').PageData }>();
@@ -37,6 +39,33 @@
 
 	// Track if all inputs match the word letters
 	const isComplete = $derived(word === inputsValues.join('').toLowerCase());
+	
+	// Track if the word has been pronounced after completion
+	let hasPronouncedCompletion = $state(false);
+	
+	// Watch for isComplete changes and pronounce the word when it becomes true
+	$effect(() => {
+		if (isComplete && !hasPronouncedCompletion) {
+			pronounceWord();
+			hasPronouncedCompletion = true;
+		}
+	});
+	
+	// Function to pronounce the word
+	async function pronounceWord() {
+		try {
+			// Unlock audio context first (important for mobile browsers)
+			await unlockAudioPlayback();
+			
+			// Get the audio for the word from cache or API
+			const audioData = await audioDB.fetchAudio(word);
+			
+			// Play the audio
+			await playAudio(audioData);
+		} catch (error) {
+			console.error('Error pronouncing word:', error);
+		}
+	}
 
 	// Check if this is the last word in the session
 	const isLastWord = $derived(sessionStatus.current === sessionStatus.total - 1);
@@ -101,6 +130,11 @@
 
 		const [firstInput] = inputRefs;
 		if (firstInput) firstInput.focus();
+		
+		// Pre-fetch the audio for the current word
+		unlockAudioPlayback()
+			.then(() => audioDB.fetchAudio(word))
+			.catch(error => console.error('Error pre-fetching word audio:', error));
 	});
 </script>
 

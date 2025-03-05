@@ -6,6 +6,7 @@ import { settingsStore } from './settings';
 
 // Cookie names
 const SESSION_COOKIE = 'wordSession';
+const USED_WORDS_COOKIE = 'usedWords';
 
 // Type definitions
 interface WordSession {
@@ -16,6 +17,31 @@ interface WordSession {
 
 // Initialize session store
 function createSessionStore() {
+  // Track words that have been used across sessions
+  const loadUsedWordsFromCookie = (): string[] => {
+    if (!browser) return [];
+    
+    const usedWordsCookie = getCookie(USED_WORDS_COOKIE);
+    if (!usedWordsCookie) return [];
+    
+    try {
+      return JSON.parse(usedWordsCookie);
+    } catch (e) {
+      console.error('Failed to parse used words cookie:', e);
+      return [];
+    }
+  };
+  
+  // Used words across sessions
+  const usedWords = writable<string[]>(loadUsedWordsFromCookie());
+  
+  // Save used words to cookie when changed
+  if (browser) {
+    usedWords.subscribe(value => {
+      setCookie(USED_WORDS_COOKIE, JSON.stringify(value));
+    });
+  }
+
   // Create a new random session
   const createNewSession = (): WordSession => {
     // Get the configured session length
@@ -66,23 +92,39 @@ function createSessionStore() {
       }
     }
     
-    // Check if we have enough available words
-    if (levelFilteredWords.length < sessionLength) {
-      console.warn(`Not enough available words (${levelFilteredWords.length}) for requested session length (${sessionLength}). Using all available words.`);
+    // Get the current list of previously used words
+    const $usedWords = get(usedWords);
+    
+    // Filter out already used words for this session
+    const unusedWords = levelFilteredWords.filter(word => !$usedWords.includes(word));
+    
+    // If we've used all words, reset the used words list
+    if (unusedWords.length === 0) {
+      console.log('All words have been used. Resetting used words list.');
+      usedWords.set([]);
+      // Now all words are available again
+      unusedWords.push(...levelFilteredWords);
     }
     
-    const actualSessionLength = Math.min(sessionLength, levelFilteredWords.length);
+    // Check if we have enough available words
+    if (unusedWords.length < sessionLength) {
+      console.warn(`Not enough unused words (${unusedWords.length}) for requested session length (${sessionLength}). Using all available unused words.`);
+    }
+    
+    const actualSessionLength = Math.min(sessionLength, unusedWords.length);
     const words: string[] = [];
     
     // Generate unique random words for the session from available words
-    while (words.length < actualSessionLength && words.length < levelFilteredWords.length) {
+    while (words.length < actualSessionLength && words.length < unusedWords.length) {
       // Get a random word from available words
-      const randomIndex = Math.floor(Math.random() * levelFilteredWords.length);
-      const word = levelFilteredWords[randomIndex];
+      const randomIndex = Math.floor(Math.random() * unusedWords.length);
+      const word = unusedWords[randomIndex];
       
-      // Avoid duplicates
+      // Avoid duplicates within this session
       if (!words.includes(word)) {
         words.push(word);
+        // Add to the global used words list
+        usedWords.update(list => [...list, word]);
       }
     }
     
@@ -175,6 +217,16 @@ function createSessionStore() {
         words: $session.words,
         progress: $session.completed
       };
+    },
+    
+    // Reset the used words list
+    resetUsedWords: () => {
+      usedWords.set([]);
+    },
+    
+    // Get the number of used words
+    getUsedWordsCount: () => {
+      return get(usedWords).length;
     }
   };
 }
