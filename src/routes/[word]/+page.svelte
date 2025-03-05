@@ -3,8 +3,11 @@
 	import ProgressBullets from '$lib/components/ProgressBullets.svelte';
 	import { goto } from '$app/navigation';
 	import { onMount } from 'svelte';
-	import { synthesizeSpeech, playAudio, unlockAudioPlayback } from '$lib/services/tts';
+	import { playAudio, unlockAudioPlayback } from '$lib/services/tts';
 	import { sessionStore } from '$lib/stores/session';
+	import { audioDB } from '$lib/services/audioDB';
+	import { settingsStore } from '$lib/stores/settings';
+	import { get } from 'svelte/store';
 
 	const { data } = $props<{ data: import('./$types').PageData }>();
 	const { word } = data;
@@ -33,17 +36,19 @@
 	// Track if word has been pronounced
 	let hasBeenPronounced = $state(false);
 	let isPlaying = $state(false);
+	let audioLoading = $state(false);
 	let autoplayBlocked = $state(false);
 
-	// Function to pronounce the word using TTS service
+	// Function to pronounce the word using the audio database
 	async function pronounceWord() {
-		if (isPlaying) return;
+		if (isPlaying || audioLoading) return;
 
 		isPlaying = true;
+		audioLoading = true;
 
 		try {
-			// Use the TTS service to convert text to speech
-			const audioBase64 = await synthesizeSpeech(word);
+			// Use the audioDB to get the audio (either from cache or by fetching it)
+			const audioBase64 = await audioDB.fetchAudio(word);
 
 			// Try to play the audio and wait for it to complete
 			await playAudio(audioBase64);
@@ -61,6 +66,7 @@
 			}
 		} finally {
 			isPlaying = false;
+			audioLoading = false;
 			goto(`/${word.toLowerCase()}/input`);
 		}
 	}
@@ -83,6 +89,27 @@
 		// Try to unlock audio context
 		const initialize = async () => {
 			await unlockAudioPlayback();
+			
+			// Pre-fetch audio for all words in the current session
+			if (sessionStatus.words.length > 0) {
+				// Get settings to know which words might be used
+				const settings = get(settingsStore);
+				const availableWords = settings.availableWords || [];
+				
+				// Start with session words (highest priority)
+				const wordsToPrefetch = [...sessionStatus.words];
+				
+				// Then add some available words (limited to a reasonable amount)
+				// This helps pre-cache words the user might encounter in future sessions
+				const additionalWords = availableWords
+					.filter((w: string) => !wordsToPrefetch.includes(w))
+					.slice(0, 20); // Limit to 20 additional words
+				
+				wordsToPrefetch.push(...additionalWords);
+				
+				// Pre-fetch all words in parallel
+				audioDB.preFetchWordAudio(wordsToPrefetch).catch(console.error);
+			}
 		};
 
 		initialize().catch(console.error);
@@ -99,10 +126,10 @@
 			<button
 				onclick={pronounceWord}
 				class="mb-12 mt-7 relative inline-flex items-center justify-center gap-2 rounded-full bg-blue-100 px-4 py-2 text-blue-700 transition-colors hover:bg-blue-200 hover:[animation:pulse_0.3s_ease-in-out]"
-				disabled={isPlaying}
+				disabled={isPlaying || audioLoading}
 				aria-label="Pronounce word"
 			>
-				{#if isPlaying}
+				{#if isPlaying || audioLoading}
 					<!-- Loading spinner -->
 					<svg 
 						class="h-5 w-5 animate-spin" 
@@ -134,14 +161,14 @@
 					>
 						<path
 							fill-rule="evenodd"
-							d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.707.707L4.586 13H2a1 1 0 01-1-1V8a1 1 0 011-1h2.586l3.707-3.707a1 1 0 011.09-.217zM14.657 2.929a1 1 0 011.414 0A9.972 9.972 0 0119 10a9.972 9.972 0 01-2.929 7.071 1 1 0 01-1.414-1.414A7.971 7.971 0 0017 10c0-2.21-.894-4.208-2.343-5.657a1 1 0 010-1.414zm-2.829 2.828a1 1 0 011.415 0A5.983 5.983 0 0115 10a5.984 5.984 0 01-1.757 4.243 1 1 0 01-1.415-1.415A3.984 3.984 0 0013 10a3.983 3.983 0 00-1.172-2.828 1 1 0 010-1.415z"
+							d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.707.707L4.586 13H2a1 1 0 01-1-1V8a1 1 0 011-1h2.586l3.707-3.707a1 1 0 011.09-.217zM14.657 2.929a1 1 0 011.414 0A9.972 9.972 0 0119 10a9.972 9.972 0 01-2.929 7.071a1 1 0 01-1.414-1.414A7.971 7.971 0 0017 10c0-2.21-.894-4.208-2.343-5.657a1 1 0 010-1.414zm-2.829 2.828a1 1 0 011.415 0A5.983 5.983 0 0115 10a5.984 5.984 0 01-1.757 4.243a1 1 0 01-1.415-1.415A3.984 3.984 0 0013 10a3.983 3.983 0 00-1.172-2.828a1 1 0 010-1.415z"
 							clip-rule="evenodd"
 						/>
 					</svg>
 				{/if}
 			</button>
 
-			{#if !isPlaying}
+			{#if !isPlaying && !audioLoading}
 				<KeyCap key=" " size="lg" />
 			{/if}
 		</div>
