@@ -113,3 +113,15 @@ body {
 .speak-button:not(:disabled):hover {
   animation: pulse 0.3s ease-in-out;
 }
+
+
+body {
+  background-color: #f9fafb;
+  font-family:
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    Roboto,
+    sans-serif;
+}
