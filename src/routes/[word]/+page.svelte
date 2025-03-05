@@ -98,7 +98,7 @@
 			<!-- Pronunciation Button -->
 			<button
 				onclick={pronounceWord}
-				class="mb-12 mt-7  flex items-center justify-center gap-2 rounded-full bg-blue-100 px-4 py-2 text-blue-700 transition-colors hover:bg-blue-200"
+				class="mb-12 mt-7 relative inline-flex items-center justify-center gap-2 rounded-full bg-blue-100 px-4 py-2 text-blue-700 transition-colors hover:bg-blue-200 hover:[animation:pulse_0.3s_ease-in-out]"
 				disabled={isPlaying}
 				aria-label="Pronounce word"
 			>

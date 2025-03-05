@@ -5,6 +5,6 @@
     }>();
 </script>
 
-<div class="word-display" role="heading" aria-level="1">
+<div class="text-6xl font-bold text-gray-800 mb-8" role="heading" aria-level="1">
     {props.word}
 </div> 

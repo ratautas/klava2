@@ -1,7 +1,6 @@
 @import 'tailwindcss';
 
 @keyframes shake {
-
   0%,
   100% {
     transform: translateX(0);
@@ -51,72 +50,8 @@
   --transition-speed: 0.3s;
 }
 
+/* Keeping only essential base styles that can't be easily converted to Tailwind */
 body {
-  @apply min-h-screen bg-gray-50 font-sans;
-}
-
-.letter-input {
-  @apply h-20 w-16 text-4xl text-center border-2 rounded-lg mx-2.5 focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all duration-300;
-  border-color: #e5e7eb; /* Default border color */
-  background-color: white;
-  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-  transform: translateY(0);
-  transition: all 0.2s ease;
-}
-
-.letter-input:hover {
-  @apply border-gray-300;
-}
-
-.letter-input:focus {
-  @apply border-blue-500 ring-2 ring-blue-300;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-}
-
-.letter-input.correct {
-  @apply border-green-400 bg-green-50;
-  box-shadow: 0 0 0 3px rgba(74, 222, 128, 0.25);
-}
-
-.letter-input.incorrect {
-  @apply border-red-400 bg-red-50;
-  animation: shake 0.5s ease-in-out;
-  box-shadow: 0 0 0 3px rgba(248, 113, 113, 0.25);
-}
-
-.word-display {
-  @apply text-6xl font-bold text-gray-800 mb-8;
-}
-
-.success-message {
-  @apply fixed inset-0 flex items-center justify-center bg-black;
-}
-
-.success-content {
-  @apply bg-white p-8 rounded-xl shadow-2xl text-center max-w-md mx-4;
-  animation: celebrate 1s ease-in-out;
-}
-
-.difficulty-selector {
-  @apply fixed top-4 right-4 p-2 bg-white rounded-lg shadow-md;
-}
-
-.game-container {
-  @apply container mx-auto px-4 py-8 flex flex-col items-center justify-center min-h-screen;
-}
-
-.speak-button {
-  @apply relative inline-flex items-center justify-center;
-}
-
-.speak-button:not(:disabled):hover {
-  animation: pulse 0.3s ease-in-out;
-}
-
-
-body {
-  background-color: #f9fafb;
   font-family:
     system-ui,
     -apple-system,
